@@ -1,13 +1,43 @@
-import React,{useContext, useState} from "react";
+import React,{useContext, useState, useEffect} from "react";
 import {Tooltip, Grow} from "@mui/material";
-import { watchlist } from "../data/data";
+
 import {BarChartOutlined, KeyboardArrowDown, KeyboardArrowUp, MoreHoriz} from "@mui/icons-material"
 import GeneralContext from "./GeneralContext";
 import { DoughnutChart } from "./DoughnutChart";
+import axios from "axios";
 
 const WatchList = () => {
+
+    const [watchlist, setWatchlist] = useState([]); // State to store fetched data
+  
+    const fetchData = async () => {
+      const options = {
+        method: "GET",
+        url: "https://indian-stock-exchange-api2.p.rapidapi.com/NSE_most_active",
+        headers: {
+          "x-rapidapi-host": "indian-stock-exchange-api2.p.rapidapi.com",
+          "x-rapidapi-key": "23a5285cf5msh63244f2ed898c19p1da3c9jsn641d6b7684ff",
+        },
+      };
+  
+      try {
+        const response = await axios.request(options);
+        setWatchlist(response.data); // Update state with new data
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+  
+    useEffect(() => {
+      fetchData(); 
+      const intervalId = setInterval(() => {
+        fetchData();
+      }, 6000); 
+      return () => clearInterval(intervalId);
+    }, []);
+  
   const data = {
-    labels: watchlist.map(stock => stock.name),
+    labels: watchlist.map(stock => stock.ticker),
     datasets: [
       {
         label: 'Price',
@@ -16,7 +46,7 @@ const WatchList = () => {
           'rgba(255, 99, 132, 0.2)',
           'rgba(54, 162, 235, 0.2)',
           'rgba(255, 206, 86, 0.2)',
-          'rgba(75, 192, 192, 0.2)',
+          'rgba(75, 110, 110, 0.2)',
           'rgba(153, 102, 255, 0.2)',
           'rgba(255, 159, 64, 0.2)',
         ],
@@ -73,14 +103,14 @@ const WatchListItem =({stock})=>{
   return(
     <li onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <div className="item">
-        <p className={stock.isDown ? "down" : "up"}>{stock.name}</p>
+        <p className={stock.isDown ? "down" : "up"}>{stock.ticker}</p>
         <div className="item-info">
-          <span className="percent">{stock.percent}</span>
-          {stock.isDown ? (<KeyboardArrowDown className="down"/>):(<KeyboardArrowUp className="up"/>)}
+          <span className="percent">{stock.percent_change + "%"}</span>
+          {stock.percent_change<0 ? (<KeyboardArrowDown className="down"/>):(<KeyboardArrowUp className="up"/>)}
           <span className="price">{stock.price}</span>
         </div>
       </div>
-      {showWatchListActions && <WatchListActions uid={stock.name} />}
+      {showWatchListActions && <WatchListActions uid={stock.ticker} />}
     </li>
   );
 };
