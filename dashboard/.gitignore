@@ -4,6 +4,7 @@
 # Dependency directories
 node_modules/
 vendor/
+build/
 
 # OS files
 .DS_Store
